@@ -53,15 +53,6 @@ class ReportData:
     #获取病情描述数据
     def get_words(self):
         sql = """ 
-SELECT f_uuid
-,f_msg_content AS f_msg_content
-,f_doctor_dep
-FROM t_easyhin_fact_inquiry_record a
-LEFT JOIN t_easyhin_dim_doctor b ON a.f_doctor_id = b.id
-WHERE  f_uuid != '' 
-AND f_type !=4 AND f_msg_content !='' 
-AND f_crt_time>='2018-01-01'
-GROUP BY f_uuid
          """
         #print sql
         return self.jdbc(sql);
@@ -69,17 +60,7 @@ GROUP BY f_uuid
     #获取医生回复数据
     def get_doctor_reply(self):
         sql = """
-SELECT 
-a.f_uuid
-,a.f_msg_content AS f_msg_content
-,c.f_doctor_dep 
-FROM t_easyhin_dim_app_records a 
-LEFT JOIN t_easyhin_fact_inquiry_record b ON a.f_uuid=b.f_uuid
-LEFT JOIN t_easyhin_dim_doctor c ON b.f_doctor_id = c.id
-WHERE b.f_crt_time>='2018-01-01'
-AND c.f_doctor_dep = '小儿皮肤科'
-AND a.f_msg_direct =1
-AND a.f_msg_type = 1
+
 """
         return self.jdbc(sql);
 
