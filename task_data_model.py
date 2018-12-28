@@ -2,8 +2,7 @@
 import MySQLdb
 
 class ReportData:  
-    def __init__(self):  
-
+    def __init__(self):
         self.conn = MySQLdb.connect(
             host='localhost',
             port=3306,
@@ -12,18 +11,7 @@ class ReportData:
             db='d_easyhin_stat_ret',
             charset="utf8",
         )
-    def changeDB(self,dbname):
-        if dbname=='d_easyhin_card_center':
-            self.conn.close()
-            self.conn = MySQLdb.connect(
-                host='localhost',
-                port=3306,
-                user='root',
-                passwd='welcome123',
-                db='d_easyhin_card_center',
-                charset="utf8",
-            )
-        return 'change db to %s successfully' %(dbname)
+
     def __del__(self):
 	    self.conn.close()
 
@@ -57,23 +45,50 @@ class ReportData:
             cursor.close()
             return True
         except:
+            print sql
             print ("Error: unable to insert data")
             self.conn.rollback
 
 
-    #获取订单数据
+    #获取病情描述数据
     def get_words(self):
         sql = """ 
-            SELECT f_order_id,f_msg_content AS f_msg_content
-FROM t_easyhin_fact_inquiry_record WHERE  f_order_id != '' AND f_type !=4 AND f_msg_content !='' 
+SELECT f_uuid
+,f_msg_content AS f_msg_content
+,f_doctor_dep
+FROM t_easyhin_fact_inquiry_record a
+LEFT JOIN t_easyhin_dim_doctor b ON a.f_doctor_id = b.id
+WHERE  f_uuid != '' 
+AND f_type !=4 AND f_msg_content !='' 
 AND f_crt_time>='2018-01-01'
- GROUP BY f_order_id
+GROUP BY f_uuid
          """
         #print sql
         return self.jdbc(sql);
-    def inser_words(self,f_order_id,words):
-        sql = "INSERT t_order_fenci(f_order_id,f_wd) VALUES('%s','%s')"%(f_order_id,words)
+
+    #获取医生回复数据
+    def get_doctor_reply(self):
+        sql = """
+SELECT 
+a.f_uuid
+,a.f_msg_content AS f_msg_content
+,c.f_doctor_dep 
+FROM t_easyhin_dim_app_records a 
+LEFT JOIN t_easyhin_fact_inquiry_record b ON a.f_uuid=b.f_uuid
+LEFT JOIN t_easyhin_dim_doctor c ON b.f_doctor_id = c.id
+WHERE b.f_crt_time>='2018-01-01'
+AND c.f_doctor_dep = '小儿皮肤科'
+AND a.f_msg_direct =1
+AND a.f_msg_type = 1
+"""
+        return self.jdbc(sql);
+
+    def inser_words(self,f_order_id,word,cnt,dep):
+        sql = "INSERT t_order_fenci(f_order_id,f_wd,f_cnt,f_dep) VALUES('%s','%s','%s','%s')"%(f_order_id,word,cnt,dep)
         #print sql
+        return self.insert(sql);
+
+    def insert_sql(self,sql):
         return self.insert(sql);
 
 
